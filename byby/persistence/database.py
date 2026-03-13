@@ -1,13 +1,10 @@
 """Database connection and models using SQLAlchemy async."""
-from __future__ import annotations
 
-from datetime import datetime
-from typing import Optional
+from __future__ import annotations
 
 import structlog
 from sqlalchemy import (
     BigInteger,
-    Boolean,
     Column,
     DateTime,
     Float,
@@ -30,9 +27,7 @@ class Base(DeclarativeBase):
 
 class OHLCVRecord(Base):
     __tablename__ = "ohlcv"
-    __table_args__ = (
-        Index("ix_ohlcv_symbol_timeframe_ts", "symbol", "timeframe", "timestamp"),
-    )
+    __table_args__ = (Index("ix_ohlcv_symbol_timeframe_ts", "symbol", "timeframe", "timestamp"),)
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     symbol = Column(String(50), nullable=False)
@@ -47,9 +42,7 @@ class OHLCVRecord(Base):
 
 class RegimeRecord(Base):
     __tablename__ = "regime_history"
-    __table_args__ = (
-        Index("ix_regime_symbol_ts", "symbol", "timestamp"),
-    )
+    __table_args__ = (Index("ix_regime_symbol_ts", "symbol", "timestamp"),)
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     symbol = Column(String(50), nullable=False)

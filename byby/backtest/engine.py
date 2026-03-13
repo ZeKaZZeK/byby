@@ -1,19 +1,18 @@
 """Backtest engine with minute-level data, fees, slippage, and partial fills."""
+
 from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Optional
 
-import numpy as np
 import pandas as pd
 import structlog
 
-from byby.market_data.models import OHLCV, MarketState, OrderBook
+from byby.market_data.models import OHLCV, MarketState
 from byby.regime_detector.detector import RegimeDetector
 from byby.risk_manager.manager import RiskManager
-from byby.strategies.base import DesiredOrder, OrderSide
+from byby.strategies.base import OrderSide
 
 logger = structlog.get_logger(__name__)
 
@@ -37,8 +36,8 @@ class BacktestPosition:
     side: str
     entry_price: float
     quantity: float
-    stop_loss: Optional[float] = None
-    take_profit: Optional[float] = None
+    stop_loss: float | None = None
+    take_profit: float | None = None
     strategy_id: str = ""
     entry_time: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
     pnl: float = 0.0
@@ -69,7 +68,7 @@ class BacktestResult:
     trades: list[BacktestTrade] = field(default_factory=list)
     equity_curve: list[tuple[datetime, float]] = field(default_factory=list)
     initial_capital: float = 10000.0
-    config: Optional[BacktestConfig] = None
+    config: BacktestConfig | None = None
 
     @property
     def final_equity(self) -> float:
@@ -163,7 +162,7 @@ class BacktestEngine:
 
         result.equity_curve.append((ohlcv_data[0].timestamp, equity))
 
-        for i, candle in enumerate(ohlcv_data):
+        for _i, candle in enumerate(ohlcv_data):
             history.append(candle)
 
             # Check stop loss / take profit for existing positions
@@ -173,7 +172,9 @@ class BacktestEngine:
                 positions.remove(p)
 
             # Daily PnL tracking
-            self._risk_manager.update_positions(len(positions), sum(p.notional_value / equity for p in positions))
+            self._risk_manager.update_positions(
+                len(positions), sum(p.notional_value / equity for p in positions)
+            )
             self._risk_manager.check_daily_reset()
 
             # Regime detection (need enough data)

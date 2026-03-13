@@ -1,9 +1,9 @@
 """Rule-based market regime detector."""
+
 from __future__ import annotations
 
 from collections import deque
 from datetime import datetime, timezone
-from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -66,7 +66,7 @@ class RegimeDetector:
     def __init__(self, settings=None) -> None:
         self.settings = settings or get_settings()
         self._history: deque[RegimeResult] = deque(maxlen=100)
-        self._current_regime: Optional[MarketRegime] = None
+        self._current_regime: MarketRegime | None = None
         self._regime_count: int = 0  # consecutive periods with same candidate
 
     def detect(self, market_state: MarketState) -> RegimeResult:
@@ -125,7 +125,14 @@ class RegimeDetector:
             timeframe = getattr(market_state, "timeframe", None)
             if timeframe is None and market_state.ohlcv_history:
                 timeframe = market_state.ohlcv_history[0].timeframe
-            bars_per_year = {"1m": 525600, "5m": 105120, "15m": 35040, "1h": 8760, "4h": 2190, "1d": 365}
+            bars_per_year = {
+                "1m": 525600,
+                "5m": 105120,
+                "15m": 35040,
+                "1h": 8760,
+                "4h": 2190,
+                "1d": 365,
+            }
             multiplier = bars_per_year.get(timeframe or "1m", 525600)
             features["volatility_annualized"] = features["volatility"] * np.sqrt(multiplier)
         else:
@@ -138,7 +145,9 @@ class RegimeDetector:
             adx, plus_di, minus_di = _compute_adx(df["high"], df["low"], df["close"], adx_period)
             features["adx"] = float(adx.iloc[-1]) if not np.isnan(adx.iloc[-1]) else 0.0
             features["plus_di"] = float(plus_di.iloc[-1]) if not np.isnan(plus_di.iloc[-1]) else 0.0
-            features["minus_di"] = float(minus_di.iloc[-1]) if not np.isnan(minus_di.iloc[-1]) else 0.0
+            features["minus_di"] = (
+                float(minus_di.iloc[-1]) if not np.isnan(minus_di.iloc[-1]) else 0.0
+            )
         else:
             features["adx"] = 0.0
             features["plus_di"] = 0.0
@@ -168,7 +177,9 @@ class RegimeDetector:
         # Volume activity
         if len(df) >= 20:
             avg_vol = df["volume"].tail(20).mean()
-            features["volume_ratio"] = float(df["volume"].iloc[-1] / avg_vol) if avg_vol > 0 else 1.0
+            features["volume_ratio"] = (
+                float(df["volume"].iloc[-1] / avg_vol) if avg_vol > 0 else 1.0
+            )
         else:
             features["volume_ratio"] = 1.0
 
@@ -235,5 +246,5 @@ class RegimeDetector:
         return list(self._history)
 
     @property
-    def current_regime(self) -> Optional[MarketRegime]:
+    def current_regime(self) -> MarketRegime | None:
         return self._current_regime

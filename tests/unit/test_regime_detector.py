@@ -1,10 +1,8 @@
 """Unit tests for regime detector."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from unittest.mock import MagicMock
-
-import pytest
 
 from byby.market_data.models import OHLCV, MarketState, OrderBook, OrderBookEntry, OrderBookSide
 from byby.regime_detector.detector import RegimeDetector
@@ -19,6 +17,7 @@ def make_ohlcv(
 ) -> list[OHLCV]:
     """Generate synthetic OHLCV data."""
     import random
+
     random.seed(42)
     candles = []
     price = base_price
@@ -93,7 +92,13 @@ class TestRegimeDetector:
         state = make_market_state(candles, with_orderbook=False)
         result = detector.detect(state)
         # High vol should be detected (may still be RANGE if ADX takes precedence)
-        assert result.regime in (MarketRegime.HIGH_VOL, MarketRegime.TREND_UP, MarketRegime.TREND_DOWN, MarketRegime.RANGE, MarketRegime.UNKNOWN)
+        assert result.regime in (
+            MarketRegime.HIGH_VOL,
+            MarketRegime.TREND_UP,
+            MarketRegime.TREND_DOWN,
+            MarketRegime.RANGE,
+            MarketRegime.UNKNOWN,
+        )
         assert 0.0 <= result.confidence <= 1.0
 
     def test_illiquid_detected_high_spread(self):
@@ -122,7 +127,7 @@ class TestRegimeDetector:
 
         # First detection sets regime
         result1 = detector.detect(state)
-        initial_regime = result1.regime
+        _ = result1.regime  # just check it runs
 
         # Immediately different data - should not switch due to hysteresis
         candles2 = make_ohlcv(n=100, vol=0.05)
@@ -141,6 +146,7 @@ class TestRegimeDetector:
 
     def test_confidence_is_confident(self):
         from byby.regime_detector.models import RegimeResult
+
         result = RegimeResult(
             regime=MarketRegime.RANGE,
             confidence=0.8,

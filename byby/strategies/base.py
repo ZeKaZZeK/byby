@@ -1,11 +1,12 @@
 """Base strategy interface."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class OrderSide(str, Enum):
@@ -21,13 +22,14 @@ class OrderType(str, Enum):
 @dataclass
 class DesiredOrder:
     """Represents a desired order from a strategy."""
+
     symbol: str
     side: OrderSide
     order_type: OrderType
     quantity: float
-    price: Optional[float] = None  # None for market orders
-    stop_loss: Optional[float] = None
-    take_profit: Optional[float] = None
+    price: float | None = None  # None for market orders
+    stop_loss: float | None = None
+    take_profit: float | None = None
     strategy_id: str = ""
     client_order_id: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)

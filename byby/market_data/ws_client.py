@@ -1,9 +1,9 @@
 """Bybit WebSocket client for real-time market data."""
+
 from __future__ import annotations
 
 import asyncio
 import json
-import time
 from collections.abc import Callable, Coroutine
 from datetime import datetime, timezone
 from typing import Any
@@ -141,10 +141,7 @@ class BybitWSClient:
             return
 
         def parse_entries(raw: list, side: OrderBookSide) -> list[OrderBookEntry]:
-            return [
-                OrderBookEntry(price=float(p), size=float(s), side=side)
-                for p, s in raw
-            ]
+            return [OrderBookEntry(price=float(p), size=float(s), side=side) for p, s in raw]
 
         if msg_type == "snapshot":
             self._orderbook_cache["bids"] = parse_entries(data.get("b", []), OrderBookSide.BID)

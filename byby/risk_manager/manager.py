@@ -1,9 +1,9 @@
 """Risk manager: position sizing and risk controls."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
-from typing import Optional
+from datetime import date
 
 import structlog
 
@@ -72,17 +72,14 @@ class RiskManager:
         self,
         order: DesiredOrder,
         current_price: float,
-        atr: Optional[float] = None,
+        atr: float | None = None,
     ) -> DesiredOrder:
         """Size the order using fixed fractional or volatility-adjusted sizing."""
         risk_amount = self.state.equity * self.settings.max_risk_per_trade
 
         if not order.stop_loss:
             # Use fixed fractional sizing
-            if atr and atr > 0:
-                stop_distance = atr * 2.0
-            else:
-                stop_distance = current_price * 0.02  # 2% default stop
+            stop_distance = atr * 2.0 if atr and atr > 0 else current_price * 0.02
         else:
             # Volatility-adjusted sizing: size = risk_amount / stop_distance
             stop_distance = abs(current_price - order.stop_loss)
@@ -111,7 +108,9 @@ class RiskManager:
         """Update daily PnL."""
         self.state.daily_pnl += pnl
         self.state.equity += pnl
-        logger.info("pnl_updated", pnl=pnl, daily_pnl=self.state.daily_pnl, equity=self.state.equity)
+        logger.info(
+            "pnl_updated", pnl=pnl, daily_pnl=self.state.daily_pnl, equity=self.state.equity
+        )
 
     def update_positions(self, open_positions: int, total_exposure: float) -> None:
         """Update position tracking."""

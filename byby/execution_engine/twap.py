@@ -1,14 +1,14 @@
 """TWAP/VWAP execution for large orders."""
+
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 import structlog
 
 from byby.execution_engine.models import Order
-from byby.strategies.base import DesiredOrder, OrderSide, OrderType
+from byby.strategies.base import DesiredOrder, OrderType
 
 if TYPE_CHECKING:
     from byby.execution_engine.engine import ExecutionEngine
@@ -21,7 +21,7 @@ class TWAPExecutor:
 
     def __init__(
         self,
-        engine: "ExecutionEngine",
+        engine: ExecutionEngine,
         num_slices: int = 5,
         interval_seconds: float = 60.0,
     ) -> None:
@@ -44,7 +44,11 @@ class TWAPExecutor:
         )
 
         for i in range(self.num_slices):
-            qty = slice_qty if i < self.num_slices - 1 else total_qty - slice_qty * (self.num_slices - 1)
+            qty = (
+                slice_qty
+                if i < self.num_slices - 1
+                else total_qty - slice_qty * (self.num_slices - 1)
+            )
             slice_order = DesiredOrder(
                 symbol=desired.symbol,
                 side=desired.side,

@@ -1,15 +1,14 @@
 """Integration test for paper trading with mocked exchange."""
+
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
 from byby.market_data.models import OHLCV, MarketState
 from byby.paper_trade.runner import PaperTradingRunner
-from byby.regime_detector.models import MarketRegime, RegimeResult
 
 
 def make_candles(n: int = 150) -> list[OHLCV]:
@@ -17,6 +16,7 @@ def make_candles(n: int = 150) -> list[OHLCV]:
     price = 50000.0
     now = datetime.now(tz=timezone.utc)
     import math
+
     for i in range(n):
         t = i / n * 4 * math.pi
         trend = math.sin(t) * 0.002
@@ -106,6 +106,7 @@ class TestPaperTradingIntegration:
         runner._alerter = mock_alerter
 
         from byby.strategies.base import DesiredOrder, OrderSide, OrderType
+
         order = DesiredOrder(
             symbol="BTC/USDT:USDT",
             side=OrderSide.BUY,
@@ -132,17 +133,19 @@ class TestPaperTradingIntegration:
         runner._alerter = mock_alerter
 
         # Add a long position
-        runner._paper_positions.append({
-            "id": "test1",
-            "symbol": "BTC/USDT:USDT",
-            "side": "buy",
-            "quantity": 0.1,
-            "entry_price": 50000.0,
-            "stop_loss": 49000.0,
-            "take_profit": 52000.0,
-            "strategy_id": "test",
-            "entry_time": datetime.now(tz=timezone.utc).isoformat(),
-        })
+        runner._paper_positions.append(
+            {
+                "id": "test1",
+                "symbol": "BTC/USDT:USDT",
+                "side": "buy",
+                "quantity": 0.1,
+                "entry_price": 50000.0,
+                "stop_loss": 49000.0,
+                "take_profit": 52000.0,
+                "strategy_id": "test",
+                "entry_time": datetime.now(tz=timezone.utc).isoformat(),
+            }
+        )
 
         # Price drops to stop loss
         mock_state = MarketState(
@@ -152,6 +155,7 @@ class TestPaperTradingIntegration:
         )
         # Manually set last_price via orderbook
         from byby.market_data.models import OrderBook, OrderBookEntry, OrderBookSide
+
         mock_state.orderbook = OrderBook(
             symbol="BTC/USDT:USDT",
             timestamp=datetime.now(tz=timezone.utc),

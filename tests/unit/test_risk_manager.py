@@ -1,11 +1,10 @@
 """Unit tests for risk manager."""
-from __future__ import annotations
 
-from unittest.mock import MagicMock
+from __future__ import annotations
 
 import pytest
 
-from byby.risk_manager.manager import RiskManager, RiskState
+from byby.risk_manager.manager import RiskManager
 from byby.strategies.base import DesiredOrder, OrderSide, OrderType
 
 
@@ -85,6 +84,7 @@ class TestRiskManager:
 
     def test_daily_reset(self):
         import datetime
+
         rm = RiskManager(initial_equity=10000.0)
         rm.state.daily_pnl = -100.0
         rm.state.daily_loss_hit = True

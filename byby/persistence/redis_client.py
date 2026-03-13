@@ -1,8 +1,9 @@
 """Redis client for ephemeral state."""
+
 from __future__ import annotations
 
 import json
-from typing import Any, Optional
+from typing import Any
 
 import redis.asyncio as aioredis
 import structlog
@@ -22,7 +23,7 @@ class RedisClient:
 
     def __init__(self, settings=None) -> None:
         self.settings = settings or get_settings()
-        self._client: Optional[aioredis.Redis] = None
+        self._client: aioredis.Redis | None = None
 
     async def connect(self) -> None:
         self._client = aioredis.from_url(
@@ -47,7 +48,7 @@ class RedisClient:
         else:
             await self._client.set(key, data)
 
-    async def get_json(self, key: str) -> Optional[Any]:
+    async def get_json(self, key: str) -> Any | None:
         if not self._client:
             return None
         data = await self._client.get(key)
@@ -56,13 +57,13 @@ class RedisClient:
     async def store_regime(self, regime: str, confidence: float) -> None:
         await self.set_json(REGIME_KEY, {"regime": regime, "confidence": confidence}, ttl=300)
 
-    async def get_regime(self) -> Optional[dict]:
+    async def get_regime(self) -> dict | None:
         return await self.get_json(REGIME_KEY)
 
     async def store_risk_state(self, state: dict) -> None:
         await self.set_json(RISK_STATE_KEY, state, ttl=86400)
 
-    async def get_risk_state(self) -> Optional[dict]:
+    async def get_risk_state(self) -> dict | None:
         return await self.get_json(RISK_STATE_KEY)
 
     async def acquire_leader_lock(self, instance_id: str, ttl: int = 30) -> bool:

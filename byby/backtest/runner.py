@@ -1,4 +1,5 @@
 """Backtest runner script."""
+
 from __future__ import annotations
 
 import asyncio
@@ -15,7 +16,6 @@ from byby.config import get_settings
 from byby.logging_config import configure_logging
 from byby.market_data.models import OHLCV
 from byby.market_data.rest_client import BybitRESTClient
-from byby.regime_detector.detector import RegimeDetector
 from byby.strategy_manager.manager import StrategyManager
 
 logger = structlog.get_logger(__name__)
@@ -70,19 +70,21 @@ def save_report(result, output_dir: Path) -> None:
     # Trade log CSV
     trades_data = []
     for t in result.trades:
-        trades_data.append({
-            "entry_time": t.entry_time.isoformat(),
-            "exit_time": t.exit_time.isoformat(),
-            "symbol": t.symbol,
-            "side": t.side,
-            "entry_price": t.entry_price,
-            "exit_price": t.exit_price,
-            "quantity": t.quantity,
-            "pnl": t.pnl,
-            "fee": t.fee,
-            "exit_reason": t.exit_reason,
-            "strategy_id": t.strategy_id,
-        })
+        trades_data.append(
+            {
+                "entry_time": t.entry_time.isoformat(),
+                "exit_time": t.exit_time.isoformat(),
+                "symbol": t.symbol,
+                "side": t.side,
+                "entry_price": t.entry_price,
+                "exit_price": t.exit_price,
+                "quantity": t.quantity,
+                "pnl": t.pnl,
+                "fee": t.fee,
+                "exit_reason": t.exit_reason,
+                "strategy_id": t.strategy_id,
+            }
+        )
     if trades_data:
         pd.DataFrame(trades_data).to_csv(output_dir / "trades.csv", index=False)
 
@@ -91,12 +93,12 @@ def save_report(result, output_dir: Path) -> None:
     pd.DataFrame(equity_data).to_csv(output_dir / "equity_curve.csv", index=False)
 
     logger.info("report_saved", path=str(output_dir))
-    print(f"\n{'='*50}")
+    print(f"\n{'=' * 50}")
     print("BACKTEST REPORT")
-    print('='*50)
+    print("=" * 50)
     for k, v in summary.items():
         print(f"  {k:30s}: {v}")
-    print('='*50)
+    print("=" * 50)
 
 
 @click.command()

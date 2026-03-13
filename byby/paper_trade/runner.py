@@ -1,11 +1,11 @@
 """Paper trading runner."""
+
 from __future__ import annotations
 
 import asyncio
 import signal
 import uuid
 from datetime import datetime, timezone
-from typing import Optional
 
 import structlog
 
@@ -33,7 +33,7 @@ class PaperTradingRunner:
 
     def __init__(self, settings=None) -> None:
         self.settings = settings or get_settings()
-        self._data_manager: Optional[MarketDataManager] = None
+        self._data_manager: MarketDataManager | None = None
         self._regime_detector = RegimeDetector(settings=self.settings)
         self._strategy_manager = StrategyManager(settings=self.settings)
         self._risk_manager = RiskManager(
@@ -136,10 +136,10 @@ class PaperTradingRunner:
         signals = self._strategy_manager.generate_signals(market_state, regime_result)
 
         # Execute signals (paper mode)
-        for signal in signals:
+        for sig in signals:
             if not self._can_add_position():
                 break
-            await self._execute_paper_order(signal, market_state.last_price or 0)
+            await self._execute_paper_order(sig, market_state.last_price or 0)
 
         # Check SL/TP for open paper positions
         await self._check_paper_exits(market_state)
@@ -167,13 +167,17 @@ class PaperTradingRunner:
             "entry_time": datetime.now(tz=timezone.utc).isoformat(),
         }
         self._paper_positions.append(position)
-        self._paper_orders.append({
-            **position,
-            "status": "filled",
-            "fill_price": fill_price,
-        })
+        self._paper_orders.append(
+            {
+                **position,
+                "status": "filled",
+                "fill_price": fill_price,
+            }
+        )
 
-        record_order_submitted(sized_signal.symbol, sized_signal.side.value, sized_signal.strategy_id)
+        record_order_submitted(
+            sized_signal.symbol, sized_signal.side.value, sized_signal.strategy_id
+        )
 
         logger.info(
             "paper_order_filled",

@@ -1,10 +1,11 @@
 """Market data manager: combines WS and REST, stores history."""
+
 from __future__ import annotations
 
 import asyncio
+import contextlib
 from collections import deque
 from datetime import datetime, timedelta, timezone
-from typing import Optional
 
 import structlog
 
@@ -36,12 +37,12 @@ class MarketDataManager:
         self.settings = settings or get_settings()
 
         self._ohlcv_history: deque[OHLCV] = deque(maxlen=max_history)
-        self._orderbook: Optional[OrderBook] = None
-        self._last_trade: Optional[Trade] = None
+        self._orderbook: OrderBook | None = None
+        self._last_trade: Trade | None = None
 
         self._rest_client = BybitRESTClient(settings=self.settings)
-        self._ws_client: Optional[BybitWSClient] = None
-        self._ws_task: Optional[asyncio.Task] = None
+        self._ws_client: BybitWSClient | None = None
+        self._ws_task: asyncio.Task | None = None
         self._ws_connected = False
 
     async def start(self) -> None:
@@ -54,10 +55,8 @@ class MarketDataManager:
         """Stop data manager."""
         if self._ws_task:
             self._ws_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._ws_task
-            except asyncio.CancelledError:
-                pass
         if self._ws_client:
             await self._ws_client.stop()
         await self._rest_client.close()
@@ -68,7 +67,9 @@ class MarketDataManager:
             # Calculate lookback based on timeframe to request the right number of candles
             timeframe_minutes = {"1m": 1, "5m": 5, "15m": 15, "1h": 60, "4h": 240, "1d": 1440}
             minutes_per_candle = timeframe_minutes.get(self.timeframe, 1)
-            since = datetime.now(tz=timezone.utc) - timedelta(minutes=self.max_history * minutes_per_candle)
+            since = datetime.now(tz=timezone.utc) - timedelta(
+                minutes=self.max_history * minutes_per_candle
+            )
             candles = await self._rest_client.fetch_ohlcv(
                 self.symbol, self.timeframe, since=since, limit=self.max_history
             )

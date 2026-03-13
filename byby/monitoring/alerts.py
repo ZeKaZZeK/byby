@@ -1,9 +1,8 @@
 """Telegram alert integration."""
+
 from __future__ import annotations
 
-import asyncio
 from datetime import datetime, timezone
-from typing import Optional
 
 import httpx
 import structlog
@@ -20,7 +19,7 @@ class TelegramAlerter:
         _settings = settings or get_settings()
         self.bot_token = bot_token or _settings.telegram_bot_token
         self.chat_id = chat_id or _settings.telegram_chat_id
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
         self._enabled = bool(self.bot_token and self.chat_id)
 
     async def __aenter__(self):
@@ -56,29 +55,30 @@ class TelegramAlerter:
         msg = (
             f"🚨 *DAILY LOSS LIMIT HIT*\n"
             f"Daily PnL: `${daily_pnl:.2f}`\n"
-            f"Limit: `{limit_pct*100:.1f}%`\n"
+            f"Limit: `{limit_pct * 100:.1f}%`\n"
             f"Time: `{datetime.now(tz=timezone.utc).isoformat()}`\n"
             f"⛔ Trading suspended for today."
         )
         await self.send(msg)
 
     async def alert_ws_disconnect(self, symbol: str) -> None:
-        msg = (
-            f"⚠️ *WebSocket Disconnected*\n"
-            f"Symbol: `{symbol}`\n"
-            f"Reconnecting..."
-        )
+        msg = f"⚠️ *WebSocket Disconnected*\nSymbol: `{symbol}`\nReconnecting..."
         await self.send(msg)
 
     async def alert_exception(self, component: str, error: str) -> None:
-        msg = (
-            f"🔴 *Exception in {component}*\n"
-            f"```\n{error[:500]}\n```"
-        )
+        msg = f"🔴 *Exception in {component}*\n```\n{error[:500]}\n```"
         await self.send(msg)
 
-    async def alert_regime_change(self, from_regime: str, to_regime: str, confidence: float) -> None:
-        emoji = {"TREND_UP": "📈", "TREND_DOWN": "📉", "RANGE": "↔️", "HIGH_VOL": "⚡", "ILLIQUID": "🏜️"}.get(to_regime, "❓")
+    async def alert_regime_change(
+        self, from_regime: str, to_regime: str, confidence: float
+    ) -> None:
+        emoji = {
+            "TREND_UP": "📈",
+            "TREND_DOWN": "📉",
+            "RANGE": "↔️",
+            "HIGH_VOL": "⚡",
+            "ILLIQUID": "🏜️",
+        }.get(to_regime, "❓")
         msg = (
             f"{emoji} *Regime Change*\n"
             f"`{from_regime}` → `{to_regime}`\n"
@@ -86,7 +86,9 @@ class TelegramAlerter:
         )
         await self.send(msg)
 
-    async def alert_order_filled(self, symbol: str, side: str, qty: float, price: float, pnl: Optional[float] = None) -> None:
+    async def alert_order_filled(
+        self, symbol: str, side: str, qty: float, price: float, pnl: float | None = None
+    ) -> None:
         emoji = "🟢" if side == "buy" else "🔴"
         msg = (
             f"{emoji} *Order Filled*\n"

@@ -1,9 +1,8 @@
 """Unit tests for backtest engine."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-
-import pytest
 
 from byby.backtest.engine import BacktestConfig, BacktestEngine, BacktestResult
 from byby.market_data.models import OHLCV
@@ -17,6 +16,7 @@ def make_candles(n: int = 200, symbol: str = "BTC/USDT:USDT") -> list[OHLCV]:
     now = datetime.now(tz=timezone.utc)
     for i in range(n):
         import math
+
         # Sinusoidal price movement to create crossovers
         t = i / n * 4 * math.pi
         trend = math.sin(t) * 0.001
@@ -83,7 +83,7 @@ class TestBacktestEngine:
         result = engine.run(candles)
         # With proper risk management, equity should not go negative
         # (though fees could make it close)
-        for ts, eq in result.equity_curve:
+        for _ts, eq in result.equity_curve:
             assert eq > -1000  # very loose bound
 
     def test_max_drawdown_is_fraction(self):

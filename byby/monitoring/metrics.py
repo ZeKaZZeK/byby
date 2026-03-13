@@ -1,7 +1,6 @@
 """Prometheus metrics for the trading bot."""
-from __future__ import annotations
 
-import time
+from __future__ import annotations
 
 from prometheus_client import Counter, Gauge, Histogram, start_http_server
 

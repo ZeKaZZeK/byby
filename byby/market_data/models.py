@@ -1,10 +1,10 @@
 """Market data models."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 
 class OrderBookSide(str, Enum):
@@ -39,27 +39,27 @@ class OrderBook:
     asks: list[OrderBookEntry] = field(default_factory=list)
 
     @property
-    def best_bid(self) -> Optional[float]:
+    def best_bid(self) -> float | None:
         return self.bids[0].price if self.bids else None
 
     @property
-    def best_ask(self) -> Optional[float]:
+    def best_ask(self) -> float | None:
         return self.asks[0].price if self.asks else None
 
     @property
-    def mid_price(self) -> Optional[float]:
+    def mid_price(self) -> float | None:
         if self.best_bid and self.best_ask:
             return (self.best_bid + self.best_ask) / 2
         return None
 
     @property
-    def spread(self) -> Optional[float]:
+    def spread(self) -> float | None:
         if self.best_bid and self.best_ask:
             return self.best_ask - self.best_bid
         return None
 
     @property
-    def spread_pct(self) -> Optional[float]:
+    def spread_pct(self) -> float | None:
         if self.mid_price and self.spread:
             return self.spread / self.mid_price
         return None
@@ -73,7 +73,7 @@ class OrderBook:
         return sum(e.size for e in self.asks)
 
     @property
-    def depth_imbalance(self) -> Optional[float]:
+    def depth_imbalance(self) -> float | None:
         """Depth imbalance: positive = more bids, negative = more asks."""
         total = self.bid_depth + self.ask_depth
         if total == 0:
@@ -93,18 +93,19 @@ class Trade:
 @dataclass
 class MarketState:
     """Aggregated market state for strategy consumption."""
+
     symbol: str
     timestamp: datetime
     ohlcv_history: list[OHLCV] = field(default_factory=list)
-    orderbook: Optional[OrderBook] = None
-    last_trade: Optional[Trade] = None
+    orderbook: OrderBook | None = None
+    last_trade: Trade | None = None
 
     @property
-    def last_ohlcv(self) -> Optional[OHLCV]:
+    def last_ohlcv(self) -> OHLCV | None:
         return self.ohlcv_history[-1] if self.ohlcv_history else None
 
     @property
-    def last_price(self) -> Optional[float]:
+    def last_price(self) -> float | None:
         if self.orderbook and self.orderbook.mid_price:
             return self.orderbook.mid_price
         if self.last_ohlcv:

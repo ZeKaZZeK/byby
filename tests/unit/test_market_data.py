@@ -1,4 +1,5 @@
 """Unit tests for market data models."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -11,7 +12,6 @@ from byby.market_data.models import (
     OrderBook,
     OrderBookEntry,
     OrderBookSide,
-    Trade,
 )
 
 
@@ -95,7 +95,25 @@ class TestMarketState:
         assert state.last_price == 50050
 
     def test_last_ohlcv(self):
-        ohlcv1 = OHLCV(timestamp=datetime.now(tz=timezone.utc), open=1, high=2, low=0.5, close=1.5, volume=1, symbol="X")
-        ohlcv2 = OHLCV(timestamp=datetime.now(tz=timezone.utc), open=2, high=3, low=1.5, close=2.5, volume=1, symbol="X")
-        state = MarketState(symbol="X", timestamp=datetime.now(tz=timezone.utc), ohlcv_history=[ohlcv1, ohlcv2])
+        ohlcv1 = OHLCV(
+            timestamp=datetime.now(tz=timezone.utc),
+            open=1,
+            high=2,
+            low=0.5,
+            close=1.5,
+            volume=1,
+            symbol="X",
+        )
+        ohlcv2 = OHLCV(
+            timestamp=datetime.now(tz=timezone.utc),
+            open=2,
+            high=3,
+            low=1.5,
+            close=2.5,
+            volume=1,
+            symbol="X",
+        )
+        state = MarketState(
+            symbol="X", timestamp=datetime.now(tz=timezone.utc), ohlcv_history=[ohlcv1, ohlcv2]
+        )
         assert state.last_ohlcv == ohlcv2

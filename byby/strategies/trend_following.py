@@ -1,4 +1,5 @@
 """Trend following strategy: EMA crossover + ATR stop."""
+
 from __future__ import annotations
 
 from typing import Any

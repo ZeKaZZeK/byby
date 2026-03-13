@@ -1,10 +1,11 @@
 """Execution engine: places and tracks orders on Bybit."""
+
 from __future__ import annotations
 
 import asyncio
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
 import structlog
 from tenacity import retry, stop_after_attempt, wait_exponential
@@ -29,6 +30,7 @@ class ExecutionEngine:
     async def connect(self) -> None:
         """Connect to Bybit exchange."""
         import ccxt.async_support as ccxt
+
         params: dict[str, Any] = {
             "apiKey": self.settings.bybit_api_key,
             "secret": self.settings.bybit_api_secret,
@@ -53,7 +55,7 @@ class ExecutionEngine:
             return desired.client_order_id
         return str(uuid.uuid4())[:36]
 
-    async def submit_order(self, desired: DesiredOrder) -> Optional[Order]:
+    async def submit_order(self, desired: DesiredOrder) -> Order | None:
         """Submit a desired order to the exchange."""
         if not self._exchange:
             await self.connect()
@@ -148,7 +150,11 @@ class ExecutionEngine:
                     sl_side,
                     order.quantity,
                     desired.stop_loss,
-                    params={**params, "triggerPrice": desired.stop_loss, "stopLossPrice": desired.stop_loss},
+                    params={
+                        **params,
+                        "triggerPrice": desired.stop_loss,
+                        "stopLossPrice": desired.stop_loss,
+                    },
                 )
                 logger.info("sl_placed", local_id=order.local_id, sl=desired.stop_loss)
 
@@ -183,7 +189,7 @@ class ExecutionEngine:
             logger.error("cancel_failed", local_id=local_id, error=str(e))
             return False
 
-    async def update_order_status(self, local_id: str) -> Optional[Order]:
+    async def update_order_status(self, local_id: str) -> Order | None:
         """Fetch and update order status from exchange."""
         async with self._lock:
             order = self._orders.get(local_id)

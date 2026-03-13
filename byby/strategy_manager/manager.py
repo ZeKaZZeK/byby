@@ -1,4 +1,5 @@
 """Strategy manager: selects strategies based on market regime."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass, field
@@ -8,8 +9,8 @@ import structlog
 
 from byby.regime_detector.models import MarketRegime, RegimeResult
 from byby.strategies.base import BaseStrategy, DesiredOrder
-from byby.strategies.momentum_breakout import MomentumBreakoutStrategy
 from byby.strategies.mean_reversion import MeanReversionStrategy
+from byby.strategies.momentum_breakout import MomentumBreakoutStrategy
 from byby.strategies.trend_following import TrendFollowingStrategy
 
 logger = structlog.get_logger(__name__)
@@ -63,7 +64,7 @@ REGIME_STRATEGY_MAP: dict[MarketRegime, list[StrategyWeight]] = {
         ),
     ],
     MarketRegime.ILLIQUID: [],  # No trading in illiquid markets
-    MarketRegime.UNKNOWN: [],   # No trading in unknown regime
+    MarketRegime.UNKNOWN: [],  # No trading in unknown regime
 }
 
 
@@ -77,6 +78,7 @@ class StrategyManager:
         settings=None,
     ) -> None:
         from byby.config import get_settings
+
         self.settings = settings or get_settings()
         self.regime_strategy_map = regime_strategy_map or REGIME_STRATEGY_MAP
         self.confidence_threshold = confidence_threshold

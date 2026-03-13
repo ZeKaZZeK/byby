@@ -1,10 +1,8 @@
 """Unit tests for trading strategies."""
+
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-
-import numpy as np
-import pytest
 
 from byby.market_data.models import OHLCV, MarketState
 from byby.strategies.base import OrderSide, OrderType
@@ -19,10 +17,7 @@ def make_trending_candles(n: int = 100, direction: str = "up") -> list[OHLCV]:
     price = 50000.0
     now = datetime.now(tz=timezone.utc)
     for i in range(n):
-        if direction == "up":
-            trend = 0.002
-        else:
-            trend = -0.002
+        trend = 0.002 if direction == "up" else -0.002
         open_ = price
         close = price * (1 + trend)
         high = max(open_, close) * 1.001
@@ -45,6 +40,7 @@ def make_trending_candles(n: int = 100, direction: str = "up") -> list[OHLCV]:
 def make_ranging_candles(n: int = 100) -> list[OHLCV]:
     """Generate ranging OHLCV data."""
     import random
+
     random.seed(123)
     candles = []
     price = 50000.0

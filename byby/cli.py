@@ -1,4 +1,5 @@
 """Main CLI entry point."""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,6 +23,7 @@ def paper(symbol, testnet):
     """Run paper trading on Bybit testnet."""
     configure_logging()
     from byby.paper_trade.runner import run_paper_trading
+
     asyncio.run(run_paper_trading())
 
 
@@ -35,14 +37,18 @@ def paper(symbol, testnet):
 def backtest(symbol, start, end, capital, output, data_file):
     """Run backtest."""
     from byby.backtest.runner import main as backtest_cmd
+
     backtest_cmd.main(
         standalone_mode=False,
         args=[
-            "--symbol", symbol,
+            "--symbol",
+            symbol,
             *(["--start", start] if start else []),
             *(["--end", end] if end else []),
-            "--capital", str(capital),
-            "--output", output,
+            "--capital",
+            str(capital),
+            "--output",
+            output,
             *(["--data-file", data_file] if data_file else []),
         ],
     )
@@ -52,6 +58,7 @@ def backtest(symbol, start, end, capital, output, data_file):
 def info():
     """Show configuration and status."""
     from byby.config import get_settings
+
     settings = get_settings()
     click.echo(f"Symbol: {settings.trading_symbol}")
     click.echo(f"Testnet: {settings.bybit_testnet}")
