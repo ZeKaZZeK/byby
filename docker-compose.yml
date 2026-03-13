@@ -1,0 +1,112 @@
+version: "3.9"
+
+services:
+  bot:
+    build: .
+    container_name: byby-bot
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - BYBIT_API_KEY=${BYBIT_API_KEY}
+      - BYBIT_API_SECRET=${BYBIT_API_SECRET}
+      - BYBIT_TESTNET=${BYBIT_TESTNET:-true}
+      - TRADING_SYMBOL=${TRADING_SYMBOL:-BTC/USDT:USDT}
+      - DATABASE_URL=postgresql://byby:${POSTGRES_PASSWORD:-byby_password}@postgres:5432/byby
+      - REDIS_URL=redis://redis:6379/0
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - PAPER_TRADING=${PAPER_TRADING:-true}
+      - MAX_RISK_PER_TRADE=${MAX_RISK_PER_TRADE:-0.005}
+      - MAX_DAILY_LOSS=${MAX_DAILY_LOSS:-0.03}
+    ports:
+      - "8000:8000"
+    volumes:
+      - bot_logs:/app/logs
+    networks:
+      - byby
+
+  postgres:
+    image: timescale/timescaledb:latest-pg15
+    container_name: byby-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: byby
+      POSTGRES_USER: byby
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-byby_password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U byby -d byby"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - byby
+
+  redis:
+    image: redis:7-alpine
+    container_name: byby-redis
+    restart: unless-stopped
+    command: redis-server --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - byby
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: byby-prometheus
+    restart: unless-stopped
+    volumes:
+      - ./docker/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+    networks:
+      - byby
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: byby-grafana
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+    ports:
+      - "3000:3000"
+    networks:
+      - byby
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+  bot_logs:
+
+networks:
+  byby:
+    driver: bridge
