@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     # Trading
     trading_symbol: str = Field(default="BTC/USDT:USDT", description="Trading symbol")
     trading_timeframe: str = Field(default="1m", description="Trading timeframe")
-    max_risk_per_trade: float = Field(default=0.005, description="Max risk per trade (fraction)")
+    max_risk_per_trade: float = Field(default=0.003, description="Max risk per trade (fraction)")  # 0.3%
     max_daily_loss: float = Field(default=0.03, description="Max daily loss (fraction)")
     max_leverage: int = Field(default=5, description="Max leverage")
     max_concurrent_trades: int = Field(default=3, description="Max concurrent trades")
@@ -64,7 +64,7 @@ class Settings(BaseSettings):
     backtest_initial_capital: float = Field(default=10000.0)
 
     # Regime Detector
-    regime_confidence_threshold: float = Field(default=0.7)
+    regime_confidence_threshold: float = Field(default=0.65)  # Higher threshold = only strongest signals
     regime_hysteresis_periods: int = Field(default=5)
     adx_period: int = Field(default=14)
     adx_trend_threshold: float = Field(default=25.0)

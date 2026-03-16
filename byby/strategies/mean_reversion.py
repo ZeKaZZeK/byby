@@ -18,14 +18,14 @@ class MeanReversionStrategy(BaseStrategy):
 
     def default_params(self) -> dict[str, Any]:
         return {
-            "rsi_period": 14,
-            "rsi_oversold": 30,
-            "rsi_overbought": 70,
-            "bb_period": 20,
-            "bb_std": 2.0,
-            "atr_period": 14,
-            "atr_sl_multiplier": 1.5,
-            "min_candles": 50,
+            "rsi_period": 21,  # Longer period = smoother
+            "rsi_oversold": 20,  # Much stricter
+            "rsi_overbought": 80,  # Much stricter
+            "bb_period": 40,  # Much wider bands
+            "bb_std": 2.5,  # Wider bands = fewer false reversal signals
+            "atr_period": 20,
+            "atr_sl_multiplier": 2.0,
+            "min_candles": 80,
         }
 
     def generate_signals(self, market_state, regime_result=None) -> list[DesiredOrder]:

@@ -18,13 +18,13 @@ class MomentumBreakoutStrategy(BaseStrategy):
 
     def default_params(self) -> dict[str, Any]:
         return {
-            "donchian_period": 20,
-            "atr_period": 14,
-            "atr_sl_multiplier": 1.5,
-            "atr_tp_multiplier": 2.5,
+            "donchian_period": 80,  # Much longer = fewer but better breakouts
+            "atr_period": 20,
+            "atr_sl_multiplier": 2.5,
+            "atr_tp_multiplier": 4.0,  # 1.6:1 reward ratio
             "volume_confirmation": True,
-            "volume_multiplier": 1.5,
-            "min_candles": 40,
+            "volume_multiplier": 2.0,  # Stricter volume filter
+            "min_candles": 100,
         }
 
     def generate_signals(self, market_state, regime_result=None) -> list[DesiredOrder]:

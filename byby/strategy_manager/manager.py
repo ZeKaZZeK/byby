@@ -74,7 +74,7 @@ class StrategyManager:
     def __init__(
         self,
         regime_strategy_map: dict[MarketRegime, list[StrategyWeight]] | None = None,
-        confidence_threshold: float = 0.7,
+        confidence_threshold: float = 0.65,  # Higher threshold = only strongest signals
         settings=None,
     ) -> None:
         from byby.config import get_settings

@@ -19,14 +19,18 @@ class TrendFollowingStrategy(BaseStrategy):
     def default_params(self) -> dict[str, Any]:
         return {
             "fast_ema": 10,
-            "slow_ema": 30,
-            "atr_period": 14,
+            "slow_ema": 50,  # Much longer slow EMA to reduce noise
+            "atr_period": 20,  # Longer period for stable ATR
             "atr_sl_multiplier": 2.0,
-            "atr_tp_multiplier": 3.0,
-            "min_candles": 60,
+            "atr_tp_multiplier": 4.0,  # 2:1 reward ratio minimum
+            "min_candles": 100,  # Need much more data
+            "fast_ema_downtrend": 8,  # Faster response in downtrend (aggressive shorts)
+            "slow_ema_downtrend": 30,  # Shorter slow EMA for downtrend
         }
 
     def generate_signals(self, market_state, regime_result=None) -> list[DesiredOrder]:
+        from byby.regime_detector.models import MarketRegime
+        
         candles = market_state.ohlcv_history
         min_c = self.params["min_candles"]
         if len(candles) < min_c:
@@ -40,8 +44,11 @@ class TrendFollowingStrategy(BaseStrategy):
             }
         )
 
-        fast = self.params["fast_ema"]
-        slow = self.params["slow_ema"]
+        # Use aggressive parameters for downtrend (short) signals
+        is_downtrend = regime_result and regime_result.regime == MarketRegime.TREND_DOWN
+        
+        fast = self.params.get("fast_ema_downtrend", 8) if is_downtrend else self.params["fast_ema"]
+        slow = self.params.get("slow_ema_downtrend", 30) if is_downtrend else self.params["slow_ema"]
         atr_p = self.params["atr_period"]
 
         ema_fast = df["close"].ewm(span=fast, min_periods=fast).mean()
